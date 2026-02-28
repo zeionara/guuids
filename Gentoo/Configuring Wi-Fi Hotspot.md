@@ -258,23 +258,26 @@ Create script for automatic initialization of `wpa_supplicant`, put it at `/etc/
 ```sh
 #!/bin/bash
 
-echo 0 > /sys/bus/usb/devices/14-1/authorized
-sleep 1
-echo 1 > /sys/bus/usb/devices/14-1/authorized
+IFACE="wlan0"
 
-# Wait until interface exists
-for i in $(seq 1 60); do
-  if ip link show wlan0 >/dev/null 2>&1; then
-    break
+while true; do
+  if ifconfig "$IFACE"; then
+    # Check if the interface has an IP assigned
+    IP=$(ifconfig "$IFACE" 2>/dev/null | grep 'inet ' | awk '{print $2}')
+
+    if [ -z "$IP" ]; then
+      echo "$(date) No IP found on $IFACE. Restarting wpa_supplicant..." >> /tmp/validate-wireless-interfase-log.txt
+      sudo rc-service wpa_supplicant restart
+    else
+      echo "$(date) $IFACE has IP: $IP" >> /tmp/validate-wireless-interfase-log.txt
+      break
+    fi
+    sleep 60
+  else
+    echo "$(date) Interface $IFACE is not available" >> /tmp/validate-wireless-interfase-log.txt
+    sleep 1
   fi
-  sleep 1
 done
-
-# Bring interface up explicitly
-ip link set wlan0 up
-
-# Start wpa_supplicant (client mode)
-rc-service wpa_supplicant start
 ```
 
 Update `iptables` rules:
@@ -288,12 +291,18 @@ sudo iptables -A FORWARD -i wlan0 -o wlu1 -m state --state RELATED,ESTABLISHED -
 sudo iptables -A FORWARD -i wlu1 -o wlan0 -j ACCEPT
 ```
 
+Persist changes:
+
+```sh
+sudo rc-service iptables save
+```
+
 ## Troubleshooting
 
 If interfaces are failing to start up after reboot, try to disconnect the adapters and connect them back. To start access point manually run the command:
 
 ```sh
-sudo rc-service net.wlu1 start && sleep 1 && sudo rc-service dnsmasq start && sleep 1 && sudo rc-service hostapd start && sleep 10 && sudo ip addr add 192.168.1.1/24 dev wlu1
+sudo rc-service net.wlu1 restart; sleep 1; sudo rc-service dnsmasq restart; sleep 1; sudo rc-service hostapd restart; sleep 10; sudo ip addr add 192.168.1.1/24 dev wlu1
 ```
 
 To start `wpa_supplicant` manually:
