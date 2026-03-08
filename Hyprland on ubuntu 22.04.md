@@ -1,5 +1,11 @@
 # Installing hyprland on ubuntu 22.04
 
+::: warning Work in progress
+
+This guide is incomplete, hopefully I will return to developing it later
+
+:::
+
 ## Clone the repos
 
 ```sh
