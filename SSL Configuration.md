@@ -1,13 +1,12 @@
 # SSL Configuration
 
-In this guide we will go through the `SSL` certificate configuration for your website. As a starting point, you will need 4 files:
+In this guide we will go through the `SSL` certificate configuration for your website. As a starting point, you will need 3 files:
 
 1. Certificate itself - `certificate.crt`.
-2. `CSR` request - `certificate.csr`.
-3. Root certificate - `certificate_ca.crt`.
-4. Private key - `certificate.key`.
+2. Parent certificate - `certificate_ca.crt`.
+3. Private key - `certificate.key`.
 
-On the server, create a safe directory for storing your ssl configuration files:
+On the server, create a safe directory for storing your ssl configuration files (replace `zeio.ru` with your domain):
 
 ```sh
 sudo mkdir -p /etc/nginx/ssl/zeio.ru
